@@ -68,6 +68,7 @@ const recordSchema = new mongoose.Schema(
 recordSchema.index({ createdBy: 1, date: -1 });
 recordSchema.index({ type: 1, category: 1 });
 
+
 const Record=mongoose.model("Record", recordSchema);
 
 export default Record;

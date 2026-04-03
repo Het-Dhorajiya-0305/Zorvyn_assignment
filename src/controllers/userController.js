@@ -179,58 +179,58 @@ const loginUser = async (req, res) => {
 }
 
 
-const logoutUser = async (req, res) => {
-    try {
-        const userId = req.user._id;
+// const logoutUser = async (req, res) => {
+//     try {
+//         const userId = req.user._id;
 
-        const user = await User.findById(userId);
+//         const user = await User.findById(userId);
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            })
-        }
+//         if (!user) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "User not found"
+//             })
+//         }
 
-        user.refreshToken = null;
-        await user.save({ validateBeforeSave: false });
+//         user.refreshToken = null;
+//         await user.save({ validateBeforeSave: false });
 
-        const logoutUser = await User.findById(userId).select('-password -refreshToken');
+//         const logoutUser = await User.findById(userId).select('-password -refreshToken');
 
-        // const option = {
-        //     httpOnly: true,
-        //     secure: false,
-        //     sameSite: "Lax",
-        //     path: "/",
-        //     maxAge: 24 * 60 * 60 * 1000
-        // };
-
-
-        // for production 
+//         // const option = {
+//         //     httpOnly: true,
+//         //     secure: false,
+//         //     sameSite: "Lax",
+//         //     path: "/",
+//         //     maxAge: 24 * 60 * 60 * 1000
+//         // };
 
 
-        const option = {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            path: "/",
-            maxAge: 24 * 60 * 60 * 1000
-        };
-
-        return res.status(200).clearCookie("refreshToken", option).json({
-            success: true,
-            user: logoutUser,
-            message: "Logout successfully"
-        })
+//         // for production 
 
 
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        })
-    }
-}
+//         const option = {
+//             httpOnly: true,
+//             secure: true,
+//             sameSite: "None",
+//             path: "/",
+//             maxAge: 24 * 60 * 60 * 1000
+//         };
+
+//         return res.status(200).clearCookie("refreshToken", option).json({
+//             success: true,
+//             user: logoutUser,
+//             message: "Logout successfully"
+//         })
+
+
+//     } catch (error) {
+//         return res.status(500).json({
+//             success: false,
+//             message: error.message
+//         })
+//     }
+// }
 
 const getUserInfo = async (req, res) => {
     try {
@@ -293,9 +293,11 @@ const updateUserInfo = async (req, res) => {
         })
     }
 }
+
+
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find();
+        const users = await User.find().select("-password -refreshToken").sort({ createdAt: -1 });
 
         return res.status(200).json({
             success: true,
@@ -311,4 +313,4 @@ const getAllUsers = async (req, res) => {
     }
 }
 
-export { registerUser, loginUser, getUserInfo, getAllUsers, logoutUser, updateUserInfo };
+export { registerUser, loginUser, getUserInfo, getAllUsers, updateUserInfo };
