@@ -1,4 +1,4 @@
-import { create, getById, getRecords, remove, Summary, update } from "../services/record-service.js";
+import { create, getById, getRecords, remove, update } from "../services/record-service.js";
 
 
 const addRecord = async (req, res) => {
@@ -79,10 +79,7 @@ const getRecordById = async (req, res) => {
 const deleteRecord = async (req, res) => {
     try {
         await remove(req.params.id, req.user);
-        return res.status(200).json({
-            success: true,
-            message: "Record deleted successfully"
-        })
+        return res.status(204).send();
     } catch (error) {
         return res.status(error.status || 500).json({
             success: false,
@@ -92,22 +89,5 @@ const deleteRecord = async (req, res) => {
 
 }
 
-const getSummary=async (req,res) => {
-    try {
-        const record=await Summary(req.user._id);
 
-        return res.status(200).json({
-            success: true,
-            message: "Summary fetched successfully",
-            data: record
-        })
-    } catch (error) {
-        return res.status(error.status || 500).json({
-            success: false,
-            message: error.message || "Internal Server Error"
-        });
-    }
-}
-
-
-export { addRecord, getAllRecords, updateRecord, getRecordById, deleteRecord, getSummary };
+export { addRecord, getAllRecords, updateRecord, getRecordById, deleteRecord };

@@ -50,6 +50,13 @@ const recordSchema = new mongoose.Schema(
       index: true,
     },
 
+    userId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,

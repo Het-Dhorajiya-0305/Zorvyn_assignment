@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getAllUsers, loginUser, registerUser, updateUserInfo } from "../controllers/userController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
-import authorize from "../middlewares/authorized.js";
+import authorize from "../middlewares/authorize.js";
 
 
 

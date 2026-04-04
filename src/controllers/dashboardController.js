@@ -7,12 +7,12 @@ import {
 
 const getDashboardData = async (req, res) => {
     try {
-        const userId = req.user._id;
-
+        const userId = req.params.id;
         const summary = await getSummary(userId);
         const categoryBreakdown = await getCategoryBreakdown(userId);
         const monthlyTrends = await getMonthlyTrends(userId);
         const recentRecords = await getRecentRecords(userId);
+
 
         return res.status(200).json({
             success: true,
@@ -30,3 +30,5 @@ const getDashboardData = async (req, res) => {
         return res.status(500).json({ message: "Failed to fetch dashboard data", error: error.message });
     }
 }
+
+export default getDashboardData;

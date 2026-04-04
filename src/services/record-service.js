@@ -4,10 +4,10 @@ const RECORD_TYPES = ["income", "expense"];
 
 
 const create = async (data, user) => {
-  const { amount, type, category, date, notes, currency } = data;
-  const userId = user._id;
+  const { amount, type, category, date, notes, currency, userId } = data;
+  const adminId = user._id;
 
-  if (amount == null || !type || !category || !date) {
+  if (amount == null || !type || !category || !date || !userId) {
     throw { status: 400, message: "Required fields missing" };
   }
 
@@ -33,7 +33,8 @@ const create = async (data, user) => {
     date: parsedDate,
     notes,
     currency,
-    createdBy: userId
+    createdBy: adminId,
+    userId
   });
 };
 
@@ -43,13 +44,20 @@ const getRecords = async (user, query) => {
   const userId = user._id;
   if (!userId) throw { status: 400, message: "User ID is required" };
 
-  const { type, category, startDate, endDate } = query;
+  const { type, category, startDate, endDate, id } = query;
 
 
   const filter = {
-    createdBy: userId,
     isDeleted: false
   };
+
+  if (user.status === "admin") {
+    filter.createdBy = userId;
+  }
+
+  if (id) {
+    filter.userId = id;
+  }
 
   if (type) {
     const normalizedType = type.toLowerCase();
@@ -105,7 +113,6 @@ const update = async (recordId, data, user) => {
 
   const record = await Record.findOne({
     _id: recordId,
-    createdBy: userId,
     isDeleted: false
   });
 
@@ -149,11 +156,16 @@ const getById = async (recordId, user) => {
   const userId = user._id;
   if (!userId) throw { status: 400, message: "User ID is required" };
 
-  const record = await Record.findOne({
+  const query = {
     _id: recordId,
-    createdBy: userId,
     isDeleted: false
-  });
+  };
+
+  if (user.status === "admin") {
+    query.createdBy = userId;
+  }
+
+  const record = await Record.findOne(query);
 
   if (!record) throw { status: 404, message: "Record not found" };
 
@@ -168,7 +180,6 @@ const remove = async (recordId, user) => {
 
   const record = await Record.findOne({
     _id: recordId,
-    createdBy: userId,
     isDeleted: false
   });
 
@@ -181,62 +192,10 @@ const remove = async (recordId, user) => {
 };
 
 
-const Summary = async (userId) => {
-  if (!userId) throw { status: 400, message: "User ID is required" };
-
-  const summary = await Record.aggregate([
-    { $match: { createdBy: userId, isDeleted: false } },
-    {
-      $facet: {
-        totals: [
-          {
-            $group: {
-              _id: "$type",
-              totalAmount: { $sum: "$amount" }
-            }
-          }
-        ],
-        categoryBreakdown: [
-          {
-            $group: {
-              _id: "$category",
-              totalAmount: { $sum: "$amount" }
-            }
-          }
-        ]
-      }
-    }
-  ]);
-
-  const totals = summary[0].totals;
-
-  let totalIncome = 0;
-  let totalExpense = 0;
-
-  totals.forEach(item => {
-    if (item._id === "income") totalIncome = item.totalAmount;
-    if (item._id === "expense") totalExpense = item.totalAmount;
-  });
-
-  const categoryBreakdown = {};
-  summary[0].categoryBreakdown.forEach(item => {
-    categoryBreakdown[item._id] = item.totalAmount;
-  });
-
-  return {
-    totalIncome,
-    totalExpense,
-    netBalance: totalIncome - totalExpense,
-    categoryBreakdown
-  };
-};
-
-
 export {
   create,
   getRecords,
   update,
   getById,
-  remove,
-  Summary
+  remove
 };

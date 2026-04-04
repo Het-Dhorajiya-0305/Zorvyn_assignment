@@ -3,13 +3,14 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRouter from "./routes/userRoute.js";
 import recordRouter from "./routes/recordRoute.js";
+import dashboardRouter from "./routes/dashboardRoute.js";
 
 
 const app = express();
 
 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: process.env.CLIENT_URL,
   credentials: true
 }));
 
@@ -25,16 +26,17 @@ app.get("/", (req, res) => {
 });
 
 
-app.use("/api/users", userRouter);
-app.use("/api/records", recordRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/records", recordRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
 
-app.use((req, res) => {
+
+app.use((req, res, next) => {
   res.status(404).json({
     success: false,
     message: "Route not found"
   });
 });
-
 
 app.use((err, req, res, next) => {
   res.status(err.status || 500).json({

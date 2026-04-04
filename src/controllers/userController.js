@@ -70,7 +70,7 @@ const registerUser = async (req, res) => {
             role
         })
 
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
             message: "User registered successfully"
         })
@@ -105,9 +105,9 @@ const loginUser = async (req, res) => {
 
         
         if (!user) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "User does not exist"
+                message: "Invalid credentials"
             })
         }
         
@@ -122,9 +122,9 @@ const loginUser = async (req, res) => {
         const isPasswordCorrect = await user.isPasswordCorrect(password);
 
         if (!isPasswordCorrect) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid password"
+                message: "Invalid credentials"
             })
         }
 
@@ -293,7 +293,6 @@ const updateUserInfo = async (req, res) => {
         })
     }
 }
-
 
 const getAllUsers = async (req, res) => {
     try {

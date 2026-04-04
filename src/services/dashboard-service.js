@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Record from "../models/recordModel.js";
 
 
@@ -8,7 +9,7 @@ const getSummary = async (userId) => {
         const results = await Record.aggregate([
             {
                 $match: {
-                    createdBy: userId,
+                    userId: new mongoose.Types.ObjectId(userId),
                     isDeleted: false,
                 }
             },
@@ -19,6 +20,7 @@ const getSummary = async (userId) => {
                 }
             }
         ])
+
 
         let income = 0, expense = 0;
 
@@ -37,7 +39,6 @@ const getSummary = async (userId) => {
     }
 }
 
-
 const getCategoryBreakdown = async (userId) => {
     try {
         if (!userId) throw new Error("User ID is required");
@@ -45,7 +46,7 @@ const getCategoryBreakdown = async (userId) => {
         const results = await Record.aggregate([
             {
                 $match: {
-                    createdBy: userId,
+                    userId: new mongoose.Types.ObjectId(userId),
                     isDeleted: false,
                 }
             },
@@ -70,24 +71,42 @@ const getCategoryBreakdown = async (userId) => {
     }
 }
 
-export const getMonthlyTrends = async (userId) => {
+const getMonthlyTrends = async (userId) => {
     try {
         const results = await Record.aggregate([
             {
                 $match: {
-                    createdBy: userId,
+                    userId: new mongoose.Types.ObjectId(userId),
                     isDeleted: false,
                 },
             },
+
             {
                 $group: {
-                    _id: { $month: "$date" },
-                    total: { $sum: "$amount" },
+                    _id: {
+                        month: { $month: "$date" },
+                        type: "$type",
+                    },
+                    totalAmount: { $sum: "$amount" },
                 },
             },
+
+            {
+                $group: {
+                    _id: "$_id.month",
+                    totals: {
+                        $push: {
+                            type: "$_id.type",
+                            amount: "$totalAmount",
+                        },
+                    },
+                },
+            },
+
             {
                 $sort: { _id: 1 },
             },
+
             {
                 $project: {
                     _id: 0,
@@ -100,24 +119,27 @@ export const getMonthlyTrends = async (userId) => {
                             "$_id"
                         ],
                     },
-                    total: 1,
+                    totals: 1,
                 },
             },
         ]);
 
-        return results.map(item => ({
+        // Step 5: Transform response
+        return results.map((item) => ({
             month: item.month,
-            totalAmount: item.total,
+            totalIncome:
+                item.totals.find((t) => t.type === "income")?.amount || 0,
+            totalExpense:
+                item.totals.find((t) => t.type === "expense")?.amount || 0,
         }));
-    }
-    catch (error) {
+    } catch (error) {
         throw error;
     }
 };
 
 const getRecentRecords = async (userId) => {
     try {
-        const records = await Record.find({ createdBy: userId, isDeleted: false })
+        const records = await Record.find({ userId: new mongoose.Types.ObjectId(userId), isDeleted: false })
             .sort({ date: -1 })
             .limit(5);
 
@@ -128,8 +150,7 @@ const getRecentRecords = async (userId) => {
     }
 }
 
-
-export default {
+export {
     getSummary,
     getCategoryBreakdown,
     getMonthlyTrends,
